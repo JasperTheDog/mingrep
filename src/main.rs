@@ -1,3 +1,4 @@
+use colored::Colorize;
 use minigrep::{search, search_case_insensitive};
 use std::env;
 use std::error::Error;
@@ -7,8 +8,13 @@ use std::process;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
+    if args.iter().any(|arg| arg == "--help" || arg == "-h") {
+        print_help();
+        return;
+    }
+
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("Problem parsing arguments: {}", err);
+        eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);
     });
 
@@ -18,7 +24,7 @@ fn main() {
     );
 
     if let Err(e) = run(config) {
-        println!("Application error: {e}");
+        eprintln!("Application error: {e}");
         process::exit(1);
     }
 }
@@ -45,44 +51,87 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
+    // Change the error type to String
+    fn build(args: &[String]) -> Result<Config, String> {
         if args.len() < 3 {
-            return Err("Missing arguments");
+            return Err(String::from("Missing arguments"));
         }
         let mut iter = args.iter();
         iter.next(); // Skip program name arg
 
-        let query = iter.next().unwrap().clone(); // TODO, use references instead of clone.
+        let query = iter.next().unwrap().clone();
         let file_path = iter.next().unwrap().clone();
 
         // env vars
-        let mut ignore_case = env::var("IGNORE_CASE").is_ok(); // TODO, add both env var and arg options
+        let mut ignore_case = env::var("IGNORE_CASE").is_ok();
 
         // override env vars with arguments
-        let arg = iter.next();
+        let mut arg = iter.next();
         while !arg.is_none() {
-            let flag = arg
-                .expect("Cannot be None")
-                .strip_prefix("-")
-                .unwrap_or_else(|| {
-                    println!("Problem while parsing arguments. Invalid argument. Missing '-' ");
-                    process::exit(1);
-                });
+            let flag = match arg.unwrap().strip_prefix("-") {
+                Some(f) => f,
+                None => {
+                    return Err(String::from("Invalid argument. Missing '-' "));
+                }
+            };
+
             match flag {
-                "ignore_case" | "i" => {
+                "-ignore_case" | "i" => {
                     ignore_case = true;
                 }
                 _ => {
-                    println!("Problem when parsing arguments. Invalid argument: {}", flag);
-                    process::exit(1);
+                    // Use format! to create a dynamic String for the error
+                    return Err(format!(
+                        "Problem when parsing arguments. Invalid argument: {}",
+                        flag
+                    ));
                 }
             }
+            arg = iter.next();
         }
-
         Ok(Config {
             query,
             file_path,
             ignore_case,
         })
     }
+}
+
+fn print_help() {
+    println!("Mini version of grep written in Rust by Carson Musser\n");
+    println!(
+        "{} {} {}",
+        "Usage: ".green(),
+        "minigrep".cyan().bold(),
+        "[OPTIONS] <query> <filepath>".green()
+    );
+    println!();
+    println!("{}", "Options:".green().bold());
+    println!(
+        "  {}, {}            Print help information",
+        "-h".cyan(),
+        "--help".cyan()
+    );
+    println!(
+        "  {}, {}  Search case-insensitively. Also can set env variable IGNORE_CASE.",
+        "-i".cyan(),
+        "--case-insensitive".cyan()
+    );
+    println!();
+    println!("{}", "Examples:".green().bold());
+    println!(
+        "  {} {} {} \n{}",
+        "minigrep".cyan(),
+        "test".yellow(),
+        "poem.txt".purple(),
+        "  Search for 'test' in poem.txt"
+    );
+    println!(
+        "  {} {} {} {}",
+        "minigrep".cyan(),
+        "-i".green(),
+        "rust".yellow(),
+        "poem.txt".purple()
+    );
+    println!("  Search for 'rust' in poem.txt case-insensitively");
 }
