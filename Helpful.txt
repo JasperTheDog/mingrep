@@ -1,0 +1,42 @@
+# 1. Check for common errors without running the code.
+# This is a good way to quickly see if you have syntax errors.
+cargo check
+
+# 2. See all available commands from cargo.
+cargo help
+
+# 3. Get help for a specific command, like `run`.
+cargo help run
+
+# 1. Run the project with command-line arguments.
+# This command will compile and run your code.
+# The `--` separates your arguments from cargo's arguments.
+# Replace `<query>` and `<file_path>` with your actual values.
+# Example: `cargo run -- hello poem.txt`
+cargo run -- <query> <file_path>
+
+# 2. Run your tests.
+# You will be adding tests for your library code, so this is important.
+cargo test
+
+# 3. Build the project without running it.
+# This just compiles your code and produces the executable.
+cargo build
+
+# 4. Generate and open documentation for your own code.
+# If you add your own library functions with documentation comments (`///`),
+# this command will generate and open an offline web page for them.
+cargo doc --open
+
+# 1. Update the Rust toolchain to the latest stable version.
+# This also updates your local copy of all standard library docs.
+rustup update stable
+
+# 2. Open the official Rust book locally.
+# The URL will be a `file:///` path. Leave this tab open.
+rustup doc --book
+
+# 3. Open the standard library docs locally.
+# This page contains everything in `std`, including `env`, `fs`, `process`, etc.
+# Leave this tab open.
+rustup doc
