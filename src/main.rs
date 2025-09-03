@@ -6,20 +6,13 @@ use std::fs;
 use std::process;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    if args.iter().any(|arg| arg == "--help" || arg == "-h") {
-        print_help();
-        return;
-    }
-
-    let config = Config::build(&args).unwrap_or_else(|err| {
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
         process::exit(1);
     });
 
     println!(
-        "Searching for {} in file: {}",
+        "Searching for '{}' in file: {}",
         config.query, config.file_path
     );
 
@@ -51,24 +44,30 @@ struct Config {
 }
 
 impl Config {
-    // Change the error type to String
-    fn build(args: &[String]) -> Result<Config, String> {
-        if args.len() < 3 {
-            return Err(String::from("Missing arguments"));
+    fn build(mut args: impl Iterator<Item = String> + std::fmt::Debug) -> Result<Config, String> {
+        if args.any(|arg| arg == "--help" || arg == "-h") {
+            print_help();
+            return Err(String::from("Help option called!"));
         }
-        let mut iter = args.iter();
-        iter.next(); // Skip program name arg
+        let mut args = env::args();
+        args.next(); // skip over name of process
 
-        let query = iter.next().unwrap().clone();
-        let file_path = iter.next().unwrap().clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err(String::from("Didn't get a query string")),
+        };
+
+        let file_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err(String::from("Didn't get a file path")),
+        };
 
         // env vars
         let mut ignore_case = env::var("IGNORE_CASE").is_ok();
 
         // override env vars with arguments
-        let mut arg = iter.next();
-        while !arg.is_none() {
-            let flag = match arg.unwrap().strip_prefix("-") {
+        while let Some(arg) = args.next() {
+            let flag = match arg.strip_prefix("-") {
                 Some(f) => f,
                 None => {
                     return Err(String::from("Invalid argument. Missing '-' "));
@@ -80,14 +79,12 @@ impl Config {
                     ignore_case = true;
                 }
                 _ => {
-                    // Use format! to create a dynamic String for the error
                     return Err(format!(
                         "Problem when parsing arguments. Invalid argument: {}",
                         flag
                     ));
                 }
             }
-            arg = iter.next();
         }
         Ok(Config {
             query,
