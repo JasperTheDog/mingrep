@@ -12,8 +12,8 @@ fn main() {
     });
 
     println!(
-        "Searching for '{}' in file: {}",
-        config.query, config.file_path
+        "Searching for '{}' in file(s): {:?}",
+        config.query, config.file_paths
     );
 
     if let Err(e) = run(config) {
@@ -23,24 +23,35 @@ fn main() {
 }
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let contents = fs::read_to_string(config.file_path)?;
+    for file_path in config.file_paths {
+        let contents = fs::read_to_string(&file_path)?;
 
-    let results = if config.ignore_case {
-        search_case_insensitive(&config.query, &contents)
-    } else {
-        search(&config.query, &contents)
-    };
+        if config.group {
+            println!("\n{file_path}\n{}", "-".repeat(file_path.len()));
+        }
 
-    for line in results {
-        println!("{line}");
+        let results = if config.ignore_case {
+            search_case_insensitive(&config.query, &contents)
+        } else {
+            search(&config.query, &contents)
+        };
+
+        for line in results {
+            if config.group {
+                println!("{line}");
+            } else {
+                println!("{file_path}:{line}");
+            }
+        }
     }
 
     Ok(())
 }
 struct Config {
     query: String,
-    file_path: String,
+    file_paths: Vec<String>,
     ignore_case: bool,
+    group: bool,
 }
 
 impl Config {
@@ -57,26 +68,28 @@ impl Config {
             None => return Err(String::from("Didn't get a query string")),
         };
 
-        let file_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err(String::from("Didn't get a file path")),
-        };
+        let mut file_paths = vec![];
 
         // env vars
         let mut ignore_case = env::var("IGNORE_CASE").is_ok();
+        let mut group = env::var("GROUP").is_ok();
 
-        // override env vars with arguments
+        // override env vars with arguments and parse file_paths
         while let Some(arg) = args.next() {
             let flag = match arg.strip_prefix("-") {
                 Some(f) => f,
                 None => {
-                    return Err(String::from("Invalid argument. Missing '-' "));
+                    file_paths.push(arg);
+                    continue;
                 }
             };
 
             match flag {
                 "-ignore_case" | "i" => {
                     ignore_case = true;
+                }
+                "-group" | "g" => {
+                    group = true;
                 }
                 _ => {
                     return Err(format!(
@@ -88,8 +101,9 @@ impl Config {
         }
         Ok(Config {
             query,
-            file_path,
+            file_paths,
             ignore_case,
+            group,
         })
     }
 }
@@ -100,7 +114,7 @@ fn print_help() {
         "{} {} {}",
         "Usage: ".green(),
         "minigrep".cyan().bold(),
-        "[OPTIONS] <query> <filepath>".green()
+        "<query> [filepath ...] [OPTIONS]".green()
     );
     println!();
     println!("{}", "Options:".green().bold());
