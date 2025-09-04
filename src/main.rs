@@ -26,10 +26,6 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
     for file_path in config.file_paths {
         let contents = fs::read_to_string(&file_path)?;
 
-        if config.group {
-            println!("\n{file_path}\n{}", "-".repeat(file_path.len()));
-        }
-
         let results = if config.ignore_case {
             search_case_insensitive(&config.query, &contents)
         } else {
@@ -37,10 +33,10 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
         };
 
         for line in results {
-            if config.group {
-                println!("{line}");
-            } else {
+            if config.label_files {
                 println!("{file_path}:{line}");
+            } else {
+                println!("{line}");
             }
         }
     }
@@ -51,14 +47,14 @@ struct Config {
     query: String,
     file_paths: Vec<String>,
     ignore_case: bool,
-    group: bool,
+    label_files: bool,
 }
 
 impl Config {
     fn build(mut args: impl Iterator<Item = String> + std::fmt::Debug) -> Result<Config, String> {
         if args.any(|arg| arg == "--help" || arg == "-h") {
             print_help();
-            return Err(String::from("Help option called!"));
+            process::exit(0);
         }
         let mut args = env::args();
         args.next(); // skip over name of process
@@ -72,7 +68,7 @@ impl Config {
 
         // env vars
         let mut ignore_case = env::var("IGNORE_CASE").is_ok();
-        let mut group = env::var("GROUP").is_ok();
+        let mut label_files = env::var("HEADER").is_ok();
 
         // override env vars with arguments and parse file_paths
         while let Some(arg) = args.next() {
@@ -88,12 +84,12 @@ impl Config {
                 "-ignore_case" | "i" => {
                     ignore_case = true;
                 }
-                "-group" | "g" => {
-                    group = true;
+                "-header" | "H" => {
+                    label_files = true;
                 }
                 _ => {
                     return Err(format!(
-                        "Problem when parsing arguments. Invalid argument: {}",
+                        "Problem when parsing arguments. Invalid argument: -{}",
                         flag
                     ));
                 }
@@ -103,7 +99,7 @@ impl Config {
             query,
             file_paths,
             ignore_case,
-            group,
+            label_files,
         })
     }
 }
@@ -127,6 +123,11 @@ fn print_help() {
         "  {}, {}  Search case-insensitively. Also can set env variable IGNORE_CASE.",
         "-i".cyan(),
         "--case-insensitive".cyan()
+    );
+    println!(
+        "  {}, {}  Header each result line with filename. Also can set env variable HEADER.",
+        "-H".cyan(),
+        "--header".cyan()
     );
     println!();
     println!("{}", "Examples:".green().bold());
