@@ -110,7 +110,7 @@ fn print_help() {
         "{} {} {}",
         "Usage: ".green(),
         "minigrep".cyan().bold(),
-        "<query> [filepath ...] [OPTIONS]".green()
+        "<query> [FILE ...] [OPTIONS]".green()
     );
     println!();
     println!("{}", "Options:".green().bold());
@@ -128,6 +128,11 @@ fn print_help() {
         "  {}, {}  Header each result line with filename. Also can set env variable HEADER.",
         "-H".cyan(),
         "--header".cyan()
+    );
+    println!(
+        "{}",
+        "Note: Options and files can be intermingled. Options are marked with ('-') or ('--')"
+            .yellow()
     );
     println!();
     println!("{}", "Examples:".green().bold());
