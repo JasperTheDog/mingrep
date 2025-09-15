@@ -12,8 +12,8 @@ fn main() {
     });
 
     println!(
-        "Searching for '{}' in file(s): {:?}",
-        config.query, config.file_paths
+        "Searching for '{}' in file(s): {:?} and in dir(s): {:?}",
+        config.query, config.file_paths, config.dir_paths
     );
 
     if let Err(e) = run(config) {
@@ -46,6 +46,7 @@ fn run(config: Config) -> Result<(), Box<dyn Error>> {
 struct Config {
     query: String,
     file_paths: Vec<String>,
+    dir_paths: Vec<String>,
     ignore_case: bool,
     label_files: bool,
 }
@@ -65,6 +66,7 @@ impl Config {
         };
 
         let mut file_paths = vec![];
+        let mut dir_paths = vec![];
 
         // env vars
         let mut ignore_case = env::var("IGNORE_CASE").is_ok();
@@ -75,7 +77,17 @@ impl Config {
             let flag = match arg.strip_prefix("-") {
                 Some(f) => f,
                 None => {
-                    file_paths.push(arg);
+                    let metadata = match fs::metadata(&arg) {
+                        Ok(metadata) => metadata,
+                        Err(e) => {
+                            return Err(format!("Error parsing metadata on path '{}': {}", arg, e));
+                        }
+                    };
+                    if metadata.is_dir() {
+                        dir_paths.push(arg);
+                    } else if metadata.is_file() {
+                        file_paths.push(arg);
+                    }
                     continue;
                 }
             };
@@ -98,6 +110,7 @@ impl Config {
         Ok(Config {
             query,
             file_paths,
+            dir_paths,
             ignore_case,
             label_files,
         })
