@@ -7,22 +7,30 @@ use std::path::Path;
 
 use crate::config::Config;
 
-pub fn search<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
-    contents
-        .lines()
-        .enumerate()
-        .filter(|(_, line)| line.contains(query))
-        .map(|(i, line)| (i + 1, line))
-        .collect()
+pub fn search<'a>(
+    query: &'a str,
+    contents: &'a str,
+) -> Box<dyn Iterator<Item = (usize, &'a str)> + 'a> {
+    Box::new(
+        contents
+            .lines()
+            .enumerate()
+            .filter(move |(_, line)| line.contains(query))
+            .map(|(i, line)| (i + 1, line)),
+    )
 }
 
-pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
-    contents
-        .lines()
-        .enumerate()
-        .filter(|(_, line)| line.to_lowercase().contains(&query.to_lowercase()))
-        .map(|(i, line)| (i + 1, line))
-        .collect()
+pub fn search_case_insensitive<'a>(
+    query: &'a str,
+    contents: &'a str,
+) -> Box<dyn Iterator<Item = (usize, &'a str)> + 'a> {
+    Box::new(
+        contents
+            .lines()
+            .enumerate()
+            .filter(move |(_, line)| line.to_lowercase().contains(&query.to_lowercase()))
+            .map(|(i, line)| (i + 1, line)),
+    )
 }
 
 pub fn search_file(file_path: &Path, config: &Config) -> Result<(), Box<dyn Error>> {

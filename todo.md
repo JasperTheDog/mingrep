@@ -26,11 +26,11 @@
 _This is after initial project commits that fleshed out the OG design_
 
 ## In Progress
-- [ ] **Line Numbers**: Print the line number where the match occurs.
+
 
 ## Completed
 - [X] **Recursive search**: Accept dirs and explore them. Use walkdir crate.
-
+- [X] **Line Numbers**: Print the line number where the match occurs.
 
 # Completed Tasks
 - [X] **Argument Flags**: Add a CLI flag system instead of relying only on env vars.
