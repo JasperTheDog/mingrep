@@ -1,7 +1,6 @@
 # Project Backlog
 
 ## Quick Goals (<1 hr) ⚡️
-- [ ] **Line Numbers**: Print the line number where the match occurs.
 - [ ] **Match count**: Add a flag to only show how many matches were found.
 - [ ] **Invert match**: Print all lines that don't contain the search term.
 - [ ] **Highlight matches**: Wrap matche sin ANSI escape codes (So they show up in green/red).
@@ -9,7 +8,6 @@
 
 
 ## Medium Goals (1-3 hrs) ⏳
-- [ ] **Recursive search**: Accept dirs and explore them. Use walkdir crate.
 - [ ] **Output modes**: e.g, --json flag to print structured JSON output.
 - [ ] **Config file**: Let users define default serach options from config file.
 - [ ] **Glob patterns**: Allow *.rs or *.txt to match groups of files.
@@ -28,9 +26,10 @@
 _This is after initial project commits that fleshed out the OG design_
 
 ## In Progress
+- [ ] **Line Numbers**: Print the line number where the match occurs.
 
 ## Completed
-
+- [X] **Recursive search**: Accept dirs and explore them. Use walkdir crate.
 
 
 # Completed Tasks

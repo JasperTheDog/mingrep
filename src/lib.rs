@@ -1,3 +1,12 @@
+pub mod config;
+pub mod utils;
+
+use std::error::Error;
+use std::fs;
+use std::path::Path;
+
+use crate::config::Config;
+
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents
         .lines()
@@ -10,6 +19,25 @@ pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a st
         .lines()
         .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
         .collect()
+}
+
+pub fn search_file(file_path: &Path, config: &Config) -> Result<(), Box<dyn Error>> {
+    let contents = fs::read_to_string(file_path)?;
+
+    let results = if config.ignore_case {
+        search_case_insensitive(&config.query, &contents)
+    } else {
+        search(&config.query, &contents)
+    };
+
+    for line in results {
+        if config.label_files {
+            println!("{}:{line}", file_path.display());
+        } else {
+            println!("{line}");
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
