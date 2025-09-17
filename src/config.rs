@@ -12,6 +12,7 @@ pub struct Config {
     pub label_files: bool,
     pub include_symlinks: bool,
     pub include_hidden: bool,
+    pub include_line_numbers: bool,
 }
 
 impl Config {
@@ -38,6 +39,7 @@ impl Config {
         let mut label_files = env::var("HEADER").is_ok();
         let mut include_symlinks = env::var("INCLUDE_SYMLINKS").is_ok();
         let mut include_hidden = env::var("INCLUDE_HIDDEN").is_ok();
+        let mut include_line_numbers = env::var("INCLUDE_LINE_NUMBERS").is_ok();
 
         // override env vars with arguments and parse file_paths
         while let Some(arg) = args.next() {
@@ -72,6 +74,9 @@ impl Config {
                 "-include_hidden" | "hi" => {
                     include_hidden = true;
                 }
+                "-include_line_numbers" | "l" => {
+                    include_line_numbers = true;
+                }
                 _ => {
                     return Err(format!(
                         "Problem when parsing arguments. Invalid argument: -{}",
@@ -88,6 +93,7 @@ impl Config {
             label_files,
             include_symlinks,
             include_hidden,
+            include_line_numbers,
         })
     }
 }

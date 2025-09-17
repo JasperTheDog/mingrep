@@ -37,6 +37,11 @@ pub fn print_help() {
         "--include_hidden".cyan()
     );
     println!(
+        "  {}, {}  Include line numbers when displaying files. Also can set env variable INCLDUE_LINE_NUMBERS.",
+        "-l".cyan(),
+        "--include_line_numbers".cyan()
+    );
+    println!(
         "{}",
         "Note: Options and files can be intermingled. Options are marked with ('-') or ('--')"
             .yellow()

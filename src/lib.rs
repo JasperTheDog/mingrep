@@ -7,17 +7,21 @@ use std::path::Path;
 
 use crate::config::Config;
 
-pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
     contents
         .lines()
-        .filter(|line| line.contains(query))
+        .enumerate()
+        .filter(|(_, line)| line.contains(query))
+        .map(|(i, line)| (i + 1, line))
         .collect()
 }
 
-pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
     contents
         .lines()
-        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .enumerate()
+        .filter(|(_, line)| line.to_lowercase().contains(&query.to_lowercase()))
+        .map(|(i, line)| (i + 1, line))
         .collect()
 }
 
@@ -30,12 +34,17 @@ pub fn search_file(file_path: &Path, config: &Config) -> Result<(), Box<dyn Erro
         search(&config.query, &contents)
     };
 
-    for line in results {
+    for (line_number, line_content) in results {
+        let mut prefix = String::new();
+
         if config.label_files {
-            println!("{}:{line}", file_path.display());
-        } else {
-            println!("{line}");
+            prefix.push_str(&format!("{}:", file_path.display()));
         }
+        if config.include_line_numbers {
+            prefix.push_str(&format!("{}:", line_number));
+        }
+
+        println!("{}{}", prefix, line_content);
     }
     Ok(())
 }
@@ -52,7 +61,10 @@ Rust:
 safe, fast, productive.
 Pick three.
 Duct tape.";
-        assert_eq!(vec!["safe, fast, productive."], search(query, contents));
+        assert_eq!(
+            vec![(2, "safe, fast, productive.")],
+            search(query, contents)
+        );
     }
 
     #[test]
@@ -65,7 +77,7 @@ Pick three.
 Trust me.";
 
         assert_eq!(
-            vec!["Rust:", "Trust me."],
+            vec![(1, "Rust:"), (4, "Trust me.")],
             search_case_insensitive(query, contents)
         );
     }
