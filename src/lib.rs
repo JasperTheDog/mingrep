@@ -69,9 +69,11 @@ Rust:
 safe, fast, productive.
 Pick three.
 Duct tape.";
+        let mut iter = search(query, contents);
+
         assert_eq!(
-            vec![(2, "safe, fast, productive.")],
-            search(query, contents)
+            (2, "safe, fast, productive."),
+            iter.next().unwrap_or((0, "fail"))
         );
     }
 
@@ -83,10 +85,9 @@ Rust:
 safe, fast, productive.
 Pick three.
 Trust me.";
+        let mut iter = search_case_insensitive(query, contents);
 
-        assert_eq!(
-            vec![(1, "Rust:"), (4, "Trust me.")],
-            search_case_insensitive(query, contents)
-        );
+        assert_eq!((1, "Rust:"), iter.next().unwrap_or((0, "fail")));
+        assert_eq!((4, "Trust me."), iter.next().unwrap_or((0, "fail")));
     }
 }
